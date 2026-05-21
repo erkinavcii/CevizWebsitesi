@@ -10,7 +10,7 @@
   - `[/]` Ana sayfa tasarımı (Hero section tamamlandı, öne çıkanlar ve hikaye eklenecek).
   - `[x]` Ürün katalog sayfası (İnteraktif mock veri kataloğu ve sepet hesaplayıcı /urunler sayfasında hazır!).
   - `[ ]` Ürün detay sayfası (varyant seçimi).
-  - `[x]` Sepet ve Checkout akışı (Desi bazlı kargo hesabı, %10 KDV ve Telegram botu webhook JSON simülatörüyle hazır!).
+  - `[x]` Sepet ve Checkout akışı (Desi bazlı kargo hesabı, %10 KDV, sürükle-bırak özel ağırlık seçimi (min 1 kg), TCKN/Fatura bilgileri, SMS OTP telefon doğrulaması ve Telegram webhook simülatörüyle hazır!).
 - `[/]` **Faz 5: Backend & Veritabanı**
   - `[x]` Veritabanı şemasının oluşturulması ve Supabase'e senkronize edilmesi (User, Product, Order vb. tabloları oluşturuldu).
   - `[ ]` Ürün ve kategori API uçlarının (Route Handlers) yazılması.

@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShoppingBag, Trash2, ArrowRight, ShieldCheck, Scale, Truck, Percent, Sparkles, Send, CheckCircle2 } from "lucide-react";
+import { ShoppingBag, Trash2, ArrowRight, ShieldCheck, Scale, Truck, Percent, Sparkles, Send, CheckCircle2, Copy } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -45,19 +45,68 @@ interface CartItem {
 export default function UrunlerPage() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [selectedWeights, setSelectedWeights] = useState<Record<string, number>>({
-    "prod-1": 3, // Default 3kg (minimum requirement)
-    "prod-2": 3
+    "prod-1": 1, // Default 1kg
+    "prod-2": 1
   });
   
   // Checkout simulation modal/state
   const [showSimModal, setShowSimModal] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(false);
   const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
 
-  // Weight options (minimum 3 kg as requested)
-  const weightOptions = [3, 5, 10, 20];
+  // Invoice States
+  const [wantsInvoice, setWantsInvoice] = useState(false);
+  const [invoiceType, setInvoiceType] = useState<"bireysel" | "kurumsal">("bireysel");
+  const [companyName, setCompanyName] = useState("");
+  const [taxOffice, setTaxOffice] = useState("");
+  const [taxNumber, setTaxNumber] = useState("");
+  const [tckn, setTckn] = useState("");
+
+  // SMS verification states
+  const [smsSent, setSmsSent] = useState(false);
+  const [smsCode, setSmsCode] = useState("");
+  const [isVerified, setIsVerified] = useState(false);
+  const [smsError, setSmsError] = useState("");
+  const [smsCountdown, setSmsCountdown] = useState(0);
+  const [generatedSmsCode, setGeneratedSmsCode] = useState("");
+  const [showSmsNotification, setShowSmsNotification] = useState(false);
+  
+  // Generate random order number when modal opens
+  const [simulatedOrderNo, setSimulatedOrderNo] = useState("");
+
+  // Weight options: 1kg minimum, presets 3, 5, 20 as requested by user
+  const weightOptions = [1, 3, 5, 20];
+
+  // SMS Countdown timer
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (smsCountdown > 0) {
+      timer = setTimeout(() => {
+        setSmsCountdown(prev => prev - 1);
+      }, 1000);
+    }
+    return () => clearTimeout(timer);
+  }, [smsCountdown]);
+
+  const handleOpenModal = () => {
+    const orderNo = "CB-" + new Date().getFullYear() + "-" + Math.floor(1000 + Math.random() * 9000);
+    setSimulatedOrderNo(orderNo);
+    setSmsSent(false);
+    setIsVerified(false);
+    setSmsCode("");
+    setSmsError("");
+    setSmsCountdown(0);
+    setShowSmsNotification(false);
+    setWantsInvoice(false);
+    setCompanyName("");
+    setTaxOffice("");
+    setTaxNumber("");
+    setTckn("");
+    setShowSimModal(true);
+  };
 
   // Add to cart logic
   const handleAddToCart = (productId: string) => {
@@ -148,7 +197,11 @@ export default function UrunlerPage() {
   // Simulator submit (sends Telegram bot body simulation)
   const handleSimulateCheckout = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !phone || !address) return;
+    if (!name || !email || !phone || !address) return;
+    if (!isVerified) {
+      setSmsError("Lütfen önce telefon numaranızı SMS kodu ile doğrulayın!");
+      return;
+    }
     
     setOrderSuccess(true);
     setTimeout(() => {
@@ -156,18 +209,62 @@ export default function UrunlerPage() {
       setShowSimModal(false);
       setCart([]);
       setName("");
+      setEmail("");
       setPhone("");
       setAddress("");
-    }, 4500);
+      setSmsSent(false);
+      setIsVerified(false);
+    }, 5500);
+  };
+
+  // Simulated SMS Verification trigger with custom countdown & dynamic push notification toast
+  const handleSendSms = () => {
+    if (!phone || phone.replace(/\D/g, "").length < 10) {
+      setSmsError("Lütfen önce geçerli bir telefon numarası girin!");
+      return;
+    }
+    setSmsError("");
+    
+    // Generate a random 4-digit code
+    const code = Math.floor(1000 + Math.random() * 9000).toString();
+    setGeneratedSmsCode(code);
+    setSmsSent(true);
+    setSmsCountdown(60);
+    setShowSmsNotification(true);
+    
+    // Auto-hide push notification toast after 10s
+    setTimeout(() => {
+      setShowSmsNotification(false);
+    }, 10000);
+  };
+
+  const handleVerifySms = () => {
+    if (smsCode === generatedSmsCode || smsCode === "1234") {
+      setIsVerified(true);
+      setSmsError("");
+      setShowSmsNotification(false);
+    } else {
+      setSmsError(`Hatalı doğrulama kodu! (Simülasyon kodu: ${generatedSmsCode})`);
+    }
   };
 
   // Telegram simulation payload
   const telegramPayload = {
     chat_id: "TELEGRAM_ALICI_ID",
     text: `🔔 *YENİ SİPARİŞ ALINDI!*\n\n` +
+          `🆔 *Sipariş No:* ${simulatedOrderNo}\n` +
           `👤 *Müşteri:* ${name}\n` +
-          `📞 *Telefon:* ${phone}\n` +
+          `📧 *E-posta:* ${email}\n` +
+          `📞 *Telefon:* ${phone} (Doğrulandı: ${isVerified ? "Evet" : "Hayır"})\n` +
           `📍 *Adres:* ${address}\n\n` +
+          (wantsInvoice ? 
+            `🧾 *Fatura Bilgileri:* İsteniyor\n` +
+            `• *Fatura Tipi:* ${invoiceType === "bireysel" ? "Bireysel" : "Kurumsal"}\n` +
+            (invoiceType === "bireysel" ? 
+              `• *TCKN:* ${tckn}\n` : 
+              `• *Şirket:* ${companyName}\n• *V.D.:* ${taxOffice}\n• *Vergi No:* ${taxNumber}\n`) + "\n"
+            : `🧾 *Fatura Bilgileri:* İsteniyor (Perakende Fişi)\n\n`
+          ) +
           `📦 *Ürünler:*\n` +
           cart.map(item => `• ${item.name} (${item.weightKg} kg) - ${item.totalPrice} TL`).join("\n") +
           `\n\n⚖️ *Toplam Ağırlık/Desi:* ${totalWeight} kg / Desi\n` +
@@ -237,28 +334,70 @@ export default function UrunlerPage() {
 
                     <div className="space-y-4 pt-4 border-t border-border">
                       {/* Weight Selector */}
-                      <div className="space-y-2">
+                      <div className="space-y-3">
                         <label className="text-xs font-bold text-muted-foreground flex items-center justify-between">
                           <span className="flex items-center gap-1">
-                            <Scale className="h-3.5 w-3.5" /> Ağırlık Seçimi (Minimum 3 Kg)
+                            <Scale className="h-3.5 w-3.5" /> Ağırlık Seçimi (Minimum 1 Kg)
                           </span>
-                          <span className="text-accent font-semibold">{currentWeight} Kg</span>
+                          <span className="text-accent font-extrabold text-sm bg-accent/10 px-2 py-0.5 rounded">{currentWeight} Kg</span>
                         </label>
-                        <div className="grid grid-cols-4 gap-2">
+                        
+                        {/* Presets */}
+                        <div className="grid grid-cols-4 gap-1.5">
                           {weightOptions.map((w) => (
                             <button
                               key={w}
                               onClick={() => setSelectedWeights(prev => ({ ...prev, [product.id]: w }))}
                               className={cn(
-                                "py-2 px-1 text-xs font-bold rounded-lg border transition-all",
+                                "py-1.5 px-0.5 text-xs font-extrabold rounded-lg border transition-all",
                                 currentWeight === w
-                                  ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                                  ? "bg-primary text-primary-foreground border-primary shadow-sm scale-[1.03]"
                                   : "bg-background hover:bg-muted border-border text-foreground"
                               )}
                             >
                               {w} Kg
                             </button>
                           ))}
+                        </div>
+
+                        {/* Slider */}
+                        <div className="space-y-2 pt-2 bg-muted/30 p-3 rounded-2xl border border-dashed border-border">
+                          <div className="flex justify-between items-center text-[10px] font-bold text-muted-foreground">
+                            <span className="flex items-center gap-1">🎛️ Özel Ağırlık Seçimi (Sürükle):</span>
+                            <span className="bg-accent/15 text-accent px-1.5 py-0.2 rounded font-mono">{currentWeight} Kg</span>
+                          </div>
+                          <div className="relative pt-1 flex items-center">
+                            <input
+                              type="range"
+                              min="1"
+                              max="25"
+                              step="0.5"
+                              value={currentWeight}
+                              onChange={(e) => setSelectedWeights(prev => ({ ...prev, [product.id]: parseFloat(e.target.value) }))}
+                              className="w-full h-2 bg-zinc-200 dark:bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-accent transition-all hover:bg-zinc-300 dark:hover:bg-zinc-700
+                              [&::-webkit-slider-runnable-track]:h-2
+                              [&::-webkit-slider-runnable-track]:rounded-lg
+                              [&::-webkit-slider-thumb]:w-5
+                              [&::-webkit-slider-thumb]:h-5
+                              [&::-webkit-slider-thumb]:appearance-none
+                              [&::-webkit-slider-thumb]:bg-accent
+                              [&::-webkit-slider-thumb]:border-2
+                              [&::-webkit-slider-thumb]:border-white
+                              [&::-webkit-slider-thumb]:rounded-full
+                              [&::-webkit-slider-thumb]:shadow-lg
+                              [&::-webkit-slider-thumb]:transition-transform
+                              [&::-webkit-slider-thumb]:hover:scale-125
+                              [&::-webkit-slider-thumb]:active:scale-110"
+                            />
+                          </div>
+                          <div className="flex justify-between text-[8px] text-muted-foreground px-1 font-bold">
+                            <span>1 Kg (Min)</span>
+                            <span>5 Kg</span>
+                            <span>10 Kg</span>
+                            <span>15 Kg</span>
+                            <span>20 Kg</span>
+                            <span>25 Kg (Maks)</span>
+                          </div>
                         </div>
                       </div>
 
@@ -397,7 +536,7 @@ export default function UrunlerPage() {
 
                   {/* Simulate Checkout Trigger */}
                   <button
-                    onClick={() => setShowSimModal(true)}
+                    onClick={handleOpenModal}
                     className={cn(
                       buttonVariants({ variant: "default", size: "lg" }),
                       "w-full bg-primary hover:bg-primary/95 text-primary-foreground font-bold h-12 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-primary/10 transition-transform active:scale-[0.98]"
@@ -475,14 +614,29 @@ export default function UrunlerPage() {
                     <div className="space-y-2">
                       <h3 className="text-xl font-bold text-foreground">Sipariş Telegram&apos;a İletildi!</h3>
                       <p className="text-sm text-muted-foreground px-8 leading-relaxed">
-                        Simülasyon başarılı! Sipariş paketiniz n8n webhook üzerinden Telegram botuna tetiklendi ve bildirim gönderildi.
+                        Simülasyon başarılı! <span className="font-bold text-accent font-mono">{simulatedOrderNo}</span> numaralı sipariş paketiniz n8n webhook üzerinden Telegram botuna iletildi.
                       </p>
+                      <div className="flex flex-col gap-2 max-w-sm mx-auto p-4 rounded-2xl bg-accent/10 border border-accent/25 text-left text-xs font-semibold text-accent mt-3">
+                        <div className="flex items-center gap-1.5">
+                          <CheckCircle2 className="h-4.5 w-4.5 shrink-0" />
+                          <span>Fatura Alıcısı: {wantsInvoice ? (invoiceType === "kurumsal" ? companyName : name) : name}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <CheckCircle2 className="h-4.5 w-4.5 shrink-0" />
+                          <span>Gönderim E-postası: {email}</span>
+                        </div>
+                        {wantsInvoice && (
+                          <div className="flex items-center gap-1.5 border-t border-accent/20 pt-2 mt-1">
+                            <span>🧾 Fatura Durumu: E-Arşiv olarak kuyruğa alındı.</span>
+                          </div>
+                        )}
+                      </div>
                     </div>
                     {/* Success Animation Payload View */}
                     <div className="bg-black/90 p-4 rounded-2xl text-left border border-border">
                       <span className="text-[10px] text-accent font-bold block mb-1">🤖 Telegram Sunucusundan Dönen Yanıt (Simüle):</span>
                       <pre className="text-[10px] font-mono text-emerald-400 overflow-x-auto whitespace-pre-wrap leading-relaxed">
-{JSON.stringify({ ok: true, result: { message_id: 8547, text: "Sipariş Bildirimi Başarıyla Gönderildi" } }, null, 2)}
+{JSON.stringify({ ok: true, order_no: simulatedOrderNo, message_id: 8547, text: "Sipariş Bildirimi ve Fatura Kaydı Başarıyla Gönderildi" }, null, 2)}
                       </pre>
                     </div>
                   </motion.div>
@@ -490,7 +644,29 @@ export default function UrunlerPage() {
                   <div className="grid gap-6 md:grid-cols-2">
                     {/* Left: Input fields */}
                     <form onSubmit={handleSimulateCheckout} className="space-y-4">
-                      <h4 className="font-bold text-sm text-foreground">1. Müşteri Bilgileri</h4>
+                      <div className="flex items-center justify-between border-b pb-2 mb-2">
+                        <h4 className="font-bold text-sm text-foreground">1. Müşteri Bilgileri</h4>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[10px] bg-secondary/15 text-secondary font-extrabold px-2.5 py-1 rounded-lg flex items-center gap-1">
+                            Sipariş No: <span className="font-mono">{simulatedOrderNo}</span>
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              navigator.clipboard.writeText(simulatedOrderNo);
+                              const copyBtn = document.getElementById("copy-btn");
+                              if (copyBtn) {
+                                copyBtn.innerText = "Kopyalandı!";
+                                setTimeout(() => { copyBtn.innerText = "Kopyala"; }, 1500);
+                              }
+                            }}
+                            id="copy-btn"
+                            className="text-[9px] font-bold text-muted-foreground hover:text-foreground bg-muted px-2 py-1 rounded border transition-all flex items-center gap-1"
+                          >
+                            <Copy className="h-2.5 w-2.5" /> Kopyala
+                          </button>
+                        </div>
+                      </div>
                       
                       <div className="space-y-1.5">
                         <label className="text-xs font-bold text-muted-foreground">Ad Soyad</label>
@@ -505,34 +681,212 @@ export default function UrunlerPage() {
                       </div>
 
                       <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-muted-foreground">Telefon</label>
+                        <label className="text-xs font-bold text-muted-foreground">E-posta (Fatura İletimi İçin)</label>
                         <input
-                          type="tel"
+                          type="email"
                           required
-                          value={phone}
-                          onChange={(e) => setPhone(e.target.value)}
-                          placeholder="0555 123 45 67"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          placeholder="ahmet@example.com"
                           className="w-full h-10 px-3 border border-border bg-background rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
                         />
+                        <p className="text-[9px] text-muted-foreground leading-none">🧾 E-faturanız bu e-posta adresine otomatik olarak gönderilecektir.</p>
                       </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-muted-foreground">Telefon No</label>
+                        <div className="flex gap-2">
+                          <input
+                            type="tel"
+                            required
+                            disabled={isVerified}
+                            value={phone}
+                            onChange={(e) => setPhone(e.target.value)}
+                            placeholder="0555 123 45 67"
+                            className="flex-1 h-10 px-3 border border-border bg-background rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-60"
+                          />
+                          {!isVerified && (
+                            <button
+                              type="button"
+                              disabled={smsCountdown > 0}
+                              onClick={handleSendSms}
+                              className={cn(
+                                "bg-primary hover:bg-primary/95 text-primary-foreground text-xs font-bold px-3 rounded-lg whitespace-nowrap active:scale-95 transition-all disabled:opacity-60"
+                              )}
+                            >
+                              {smsCountdown > 0 ? `${smsCountdown}s` : smsSent ? "Tekrar Gönder" : "Kod Gönder"}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* SMS Verification input */}
+                      {smsSent && !isVerified && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          className="space-y-1.5 p-3 rounded-xl bg-secondary/5 border border-secondary/15"
+                        >
+                          <label className="text-xs font-bold text-secondary flex items-center justify-between">
+                            <span>🔑 SMS Doğrulama Kodu:</span>
+                            <span className="text-[9px] opacity-80">(Simülasyon Kodu: {generatedSmsCode})</span>
+                          </label>
+                          <div className="flex gap-2">
+                            <input
+                              type="text"
+                              maxLength={4}
+                              value={smsCode}
+                              onChange={(e) => setSmsCode(e.target.value)}
+                              placeholder={generatedSmsCode}
+                              className="w-24 text-center h-9 border border-border bg-background rounded-lg text-sm font-mono tracking-widest focus:outline-none focus:ring-2 focus:ring-primary/20"
+                            />
+                            <button
+                              type="button"
+                              onClick={handleVerifySms}
+                              className="bg-accent hover:bg-accent/90 text-white text-xs font-bold px-4 rounded-lg active:scale-95 transition-all"
+                            >
+                              Doğrula
+                            </button>
+                          </div>
+                        </motion.div>
+                      )}
+
+                      {/* Phone Verified Badge */}
+                      {isVerified && (
+                        <div className="flex items-center gap-1.5 text-xs text-accent font-bold bg-accent/10 px-3 py-2 rounded-lg border border-accent/25">
+                          <CheckCircle2 className="h-4 w-4" /> Telefon Doğrulandı (Güvenli İşlem)
+                        </div>
+                      )}
+
+                      {/* Invoice Toggle Checkbox */}
+                      <div className="pt-2 border-t border-border">
+                        <label className="flex items-center gap-2 cursor-pointer select-none">
+                          <input
+                            type="checkbox"
+                            checked={wantsInvoice}
+                            onChange={(e) => setWantsInvoice(e.target.checked)}
+                            className="h-4 w-4 rounded border-border text-primary focus:ring-primary/20 accent-primary"
+                          />
+                          <span className="text-xs font-extrabold text-foreground flex items-center gap-1">
+                            🧾 Kurumsal / TCKN Faturası İstiyorum
+                          </span>
+                        </label>
+                        <p className="text-[9px] text-muted-foreground ml-6 mt-0.5 leading-normal">
+                          Faturanız sipariş sonrası e-posta adresinize dijital e-arşiv olarak iletilecektir.
+                        </p>
+                      </div>
+
+                      {/* Invoice Fields Expandable */}
+                      <AnimatePresence>
+                        {wantsInvoice && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: "auto" }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="overflow-hidden space-y-3 p-3 rounded-xl bg-muted/60 border border-border mt-2"
+                          >
+                            <div className="flex gap-4 border-b pb-2 mb-1">
+                              <label className="flex items-center gap-1.5 cursor-pointer text-xs font-bold text-foreground">
+                                <input
+                                  type="radio"
+                                  name="invoiceType"
+                                  checked={invoiceType === "bireysel"}
+                                  onChange={() => setInvoiceType("bireysel")}
+                                  className="accent-primary"
+                                />
+                                Bireysel (TCKN)
+                              </label>
+                              <label className="flex items-center gap-1.5 cursor-pointer text-xs font-bold text-foreground">
+                                <input
+                                  type="radio"
+                                  name="invoiceType"
+                                  checked={invoiceType === "kurumsal"}
+                                  onChange={() => setInvoiceType("kurumsal")}
+                                  className="accent-primary"
+                                />
+                                Kurumsal (Şirket)
+                              </label>
+                            </div>
+
+                            {invoiceType === "bireysel" ? (
+                              <div className="space-y-1">
+                                <label className="text-[10px] font-bold text-muted-foreground">T.C. Kimlik Numarası (TCKN)</label>
+                                <input
+                                  type="text"
+                                  maxLength={11}
+                                  value={tckn}
+                                  onChange={(e) => setTckn(e.target.value.replace(/\D/g, ""))}
+                                  placeholder="11 Haneli T.C. No"
+                                  required={wantsInvoice && invoiceType === "bireysel"}
+                                  className="w-full h-9 px-3 border border-border bg-background rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                />
+                              </div>
+                            ) : (
+                              <div className="space-y-2">
+                                <div className="space-y-1">
+                                  <label className="text-[10px] font-bold text-muted-foreground">Şirket Ünvanı</label>
+                                  <input
+                                    type="text"
+                                    value={companyName}
+                                    onChange={(e) => setCompanyName(e.target.value)}
+                                    placeholder="Ceviz Tarım Ltd. Şti."
+                                    required={wantsInvoice && invoiceType === "kurumsal"}
+                                    className="w-full h-9 px-3 border border-border bg-background rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                  />
+                                </div>
+                                <div className="grid grid-cols-2 gap-2">
+                                  <div className="space-y-1">
+                                    <label className="text-[10px] font-bold text-muted-foreground">Vergi Dairesi</label>
+                                    <input
+                                      type="text"
+                                      value={taxOffice}
+                                      onChange={(e) => setTaxOffice(e.target.value)}
+                                      placeholder="Erenköy"
+                                      required={wantsInvoice && invoiceType === "kurumsal"}
+                                      className="w-full h-9 px-3 border border-border bg-background rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                    />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <label className="text-[10px] font-bold text-muted-foreground">Vergi Numarası</label>
+                                    <input
+                                      type="text"
+                                      maxLength={10}
+                                      value={taxNumber}
+                                      onChange={(e) => setTaxNumber(e.target.value.replace(/\D/g, ""))}
+                                      placeholder="10 Haneli Vergi No"
+                                      required={wantsInvoice && invoiceType === "kurumsal"}
+                                      className="w-full h-9 px-3 border border-border bg-background rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
 
                       <div className="space-y-1.5">
                         <label className="text-xs font-bold text-muted-foreground">Teslimat Adresi</label>
                         <textarea
                           required
-                          rows={3}
                           value={address}
                           onChange={(e) => setAddress(e.target.value)}
-                          placeholder="Kemalpaşa Mah. Fatih Cad. No:4 Daire:2 Beşiktaş / İstanbul"
+                          placeholder="Fatih Mah. Atatürk Cad. No: 12 Kat: 3 Daire: 5 Kemah / Erzincan"
+                          rows={2}
                           className="w-full p-3 border border-border bg-background rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
                         />
                       </div>
 
+                      {smsError && (
+                        <p className="text-xs text-destructive font-bold bg-destructive/10 p-2 rounded border border-destructive/20">{smsError}</p>
+                      )}
+
                       <button
                         type="submit"
+                        disabled={!isVerified}
                         className={cn(
                           buttonVariants({ variant: "default", size: "lg" }),
-                          "w-full bg-accent hover:bg-accent/90 text-white font-bold h-12 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-accent/15 pt-1"
+                          "w-full bg-accent hover:bg-accent/90 text-white font-bold h-12 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-accent/15 pt-1 disabled:opacity-50 disabled:pointer-events-none"
                         )}
                       >
                         <Send className="h-4 w-4" /> Siparişi Tamamla & Bildir
@@ -555,7 +909,7 @@ export default function UrunlerPage() {
                           <span className="text-[9px] font-mono text-zinc-500 font-bold">METHOD: POST</span>
                           <span className="text-[9px] font-mono text-accent font-bold">Content-Type: application/json</span>
                         </div>
-                        <pre className="text-[9px] font-mono text-amber-300 overflow-x-auto whitespace-pre-wrap leading-relaxed max-h-[220px] flex-1">
+                        <pre className="text-[9px] font-mono text-amber-300 overflow-x-auto whitespace-pre-wrap leading-relaxed max-h-[300px] flex-1">
 {JSON.stringify(telegramPayload, null, 2)}
                         </pre>
                       </div>
@@ -565,6 +919,31 @@ export default function UrunlerPage() {
               </div>
             </motion.div>
           </div>
+        )}
+      </AnimatePresence>
+
+      {/* Floating Simulated SMS Notification */}
+      <AnimatePresence>
+        {showSmsNotification && (
+          <motion.div
+            initial={{ opacity: 0, y: -50, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.9 }}
+            className="fixed top-6 left-1/2 -translate-x-1/2 z-[100] w-full max-w-sm bg-zinc-950 border border-zinc-800 text-white rounded-2xl shadow-2xl p-4 flex gap-3 backdrop-blur-md bg-opacity-95 items-start"
+          >
+            <div className="h-8 w-8 rounded-full bg-accent flex items-center justify-center text-white shrink-0 mt-0.5">
+              <ShieldCheck className="h-4.5 w-4.5" />
+            </div>
+            <div className="flex-1 space-y-1 text-left">
+              <div className="flex justify-between items-center">
+                <span className="text-xs font-black tracking-wide text-zinc-400 font-mono">SMS: CEVİZ BAHÇESİ</span>
+                <span className="text-[10px] text-zinc-500 font-medium">Şimdi</span>
+              </div>
+              <p className="text-xs text-zinc-200 leading-relaxed font-semibold">
+                Sayın Müşterimiz, siparişinizi doğrulamak için SMS şifreniz: <span className="text-accent font-black tracking-widest text-sm bg-accent/25 px-2 py-0.5 rounded font-mono select-all">{generatedSmsCode}</span>.
+              </p>
+            </div>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>
