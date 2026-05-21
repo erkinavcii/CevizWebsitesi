@@ -48,6 +48,33 @@ export default function UrunlerPage() {
     "prod-1": 1, // Default 1kg
     "prod-2": 1
   });
+  const [products, setProducts] = useState(MOCK_PRODUCTS);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/products")
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          const mapped = data.map((p: any) => {
+            const baseVariant = p.variants?.[0];
+            const pricePerKg = baseVariant ? (baseVariant.price * 2) : (p.slug === "kemah-kabuklu-ceviz" ? 240 : 490);
+            return {
+              id: p.slug === "kemah-kabuklu-ceviz" ? "prod-1" : "prod-2",
+              name: p.name,
+              slug: p.slug,
+              description: p.description,
+              pricePerKg,
+              image: p.slug === "kemah-kabuklu-ceviz" ? "/images/hero-walnuts.png" : "/images/shelled-walnuts.png",
+              tag: p.slug === "kemah-kabuklu-ceviz" ? "Yeni Sezon" : "En Çok Satan",
+              rating: p.slug === "kemah-kabuklu-ceviz" ? "4.9 (124 Değerlendirme)" : "5.0 (86 Değerlendirme)",
+            };
+          });
+          setProducts(mapped);
+        }
+      })
+      .catch((err) => console.error("Error loading products:", err));
+  }, []);
   
   // Checkout simulation modal/state
   const [showSimModal, setShowSimModal] = useState(false);
@@ -56,6 +83,9 @@ export default function UrunlerPage() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
+  const [city, setCity] = useState("");
+  const [district, setDistrict] = useState("");
+  const [citiesData, setCitiesData] = useState<any[]>([]);
 
   // Invoice States
   const [wantsInvoice, setWantsInvoice] = useState(false);
@@ -64,6 +94,10 @@ export default function UrunlerPage() {
   const [taxOffice, setTaxOffice] = useState("");
   const [taxNumber, setTaxNumber] = useState("");
   const [tckn, setTckn] = useState("");
+
+  // Consent States
+  const [marketingConsent, setMarketingConsent] = useState(false);
+  const [contractConsent, setContractConsent] = useState(false);
 
   // SMS verification states
   const [smsSent, setSmsSent] = useState(false);
@@ -91,6 +125,20 @@ export default function UrunlerPage() {
     return () => clearTimeout(timer);
   }, [smsCountdown]);
 
+  useEffect(() => {
+    fetch("https://turkiyeapi.dev/api/v1/provinces")
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.data) {
+          const sorted = data.data.sort((a: any, b: any) => a.name.localeCompare(b.name, "tr-TR"));
+          setCitiesData(sorted);
+        }
+      })
+      .catch(err => console.error("City fetch error:", err));
+  }, []);
+
+  const availableDistricts = citiesData.find(c => c.name === city)?.districts?.sort((a: any, b: any) => a.name.localeCompare(b.name, "tr-TR")) || [];
+
   const handleOpenModal = () => {
     const orderNo = "CB-" + new Date().getFullYear() + "-" + Math.floor(1000 + Math.random() * 9000);
     setSimulatedOrderNo(orderNo);
@@ -105,12 +153,16 @@ export default function UrunlerPage() {
     setTaxOffice("");
     setTaxNumber("");
     setTckn("");
+    setMarketingConsent(false);
+    setContractConsent(false);
+    setCity("");
+    setDistrict("");
     setShowSimModal(true);
   };
 
   // Add to cart logic
   const handleAddToCart = (productId: string) => {
-    const product = MOCK_PRODUCTS.find(p => p.id === productId);
+    const product = products.find(p => p.id === productId);
     if (!product) return;
 
     const selectedWeight = selectedWeights[productId];
@@ -194,27 +246,78 @@ export default function UrunlerPage() {
 
   const grandTotal = grossSubtotal + cargoFee;
 
-  // Simulator submit (sends Telegram bot body simulation)
-  const handleSimulateCheckout = (e: React.FormEvent) => {
+  // Simulator submit (sends Telegram bot body simulation and saves to database)
+  const handleSimulateCheckout = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !email || !phone || !address) return;
+    if (!name || !email || !phone || !city || !district || !address) return;
     if (!isVerified) {
       setSmsError("Lütfen önce telefon numaranızı SMS kodu ile doğrulayın!");
       return;
     }
+    if (!contractConsent) {
+      setSmsError("Siparişi tamamlamak için Mesafeli Satış Sözleşmesi ve KVKK Aydınlatma Metni'ni onaylamanız gerekmektedir.");
+      return;
+    }
     
-    setOrderSuccess(true);
-    setTimeout(() => {
-      setOrderSuccess(false);
-      setShowSimModal(false);
-      setCart([]);
-      setName("");
-      setEmail("");
-      setPhone("");
-      setAddress("");
-      setSmsSent(false);
-      setIsVerified(false);
-    }, 5500);
+    setIsSubmitting(true);
+    setSmsError("");
+
+    try {
+      const response = await fetch("/api/orders", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          orderNo: simulatedOrderNo,
+          name,
+          email,
+          phone,
+          address: `${address}\n${district} / ${city}`,
+          cart,
+          wantsInvoice,
+          invoiceType,
+          companyName,
+          taxOffice,
+          taxNumber,
+          tckn,
+          cargoFee,
+          grandTotal,
+          marketingConsent,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Sipariş oluşturulurken bir hata meydana geldi.");
+      }
+
+      console.log("Database order created successfully:", result);
+      setOrderSuccess(true);
+      
+      setTimeout(() => {
+        setOrderSuccess(false);
+        setShowSimModal(false);
+        setCart([]);
+        setName("");
+        setEmail("");
+        setPhone("");
+        setCity("");
+        setDistrict("");
+        setAddress("");
+        setMarketingConsent(false);
+        setContractConsent(false);
+        setSmsSent(false);
+        setIsVerified(false);
+        setIsSubmitting(false);
+      }, 5500);
+
+    } catch (err: any) {
+      console.error("Order submission error:", err);
+      setSmsError(err.message || "Sipariş veritabanına kaydedilirken sistemsel bir hata oluştu.");
+      setIsSubmitting(false);
+    }
   };
 
   // Simulated SMS Verification trigger with custom countdown & dynamic push notification toast
@@ -256,7 +359,8 @@ export default function UrunlerPage() {
           `👤 *Müşteri:* ${name}\n` +
           `📧 *E-posta:* ${email}\n` +
           `📞 *Telefon:* ${phone} (Doğrulandı: ${isVerified ? "Evet" : "Hayır"})\n` +
-          `📍 *Adres:* ${address}\n\n` +
+          `📍 *Adres:* ${address}\n` +
+          `🏙️ *İl/İlçe:* ${district} / ${city}\n\n` +
           (wantsInvoice ? 
             `🧾 *Fatura Bilgileri:* İsteniyor\n` +
             `• *Fatura Tipi:* ${invoiceType === "bireysel" ? "Bireysel" : "Kurumsal"}\n` +
@@ -296,7 +400,7 @@ export default function UrunlerPage() {
         <div className="grid gap-8 lg:grid-cols-12 items-start">
           {/* Products List (Left side) */}
           <div className="lg:col-span-8 grid gap-8 md:grid-cols-2">
-            {MOCK_PRODUCTS.map((product) => {
+            {products.map((product) => {
               const currentWeight = selectedWeights[product.id] || 3;
               const currentPrice = product.pricePerKg * currentWeight;
 
@@ -865,8 +969,43 @@ export default function UrunlerPage() {
                         )}
                       </AnimatePresence>
 
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-bold text-muted-foreground">İl</label>
+                          <select
+                            required
+                            value={city}
+                            onChange={(e) => {
+                              setCity(e.target.value);
+                              setDistrict(""); // reset district when city changes
+                            }}
+                            className="w-full h-10 px-3 border border-border bg-background rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 appearance-none"
+                          >
+                            <option value="">İl Seçiniz</option>
+                            {citiesData.map((c) => (
+                              <option key={c.id} value={c.name}>{c.name}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-bold text-muted-foreground">İlçe</label>
+                          <select
+                            required
+                            disabled={!city}
+                            value={district}
+                            onChange={(e) => setDistrict(e.target.value)}
+                            className="w-full h-10 px-3 border border-border bg-background rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 appearance-none disabled:opacity-60"
+                          >
+                            <option value="">İlçe Seçiniz</option>
+                            {availableDistricts.map((d: any) => (
+                              <option key={d.id} value={d.name}>{d.name}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+
                       <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-muted-foreground">Teslimat Adresi</label>
+                        <label className="text-xs font-bold text-muted-foreground">Açık Teslimat Adresi</label>
                         <textarea
                           required
                           value={address}
@@ -877,19 +1016,55 @@ export default function UrunlerPage() {
                         />
                       </div>
 
+                      {/* Consent Checkboxes */}
+                      <div className="pt-2 border-t border-border space-y-3">
+                        <label className="flex items-start gap-2 cursor-pointer select-none group">
+                          <input
+                            type="checkbox"
+                            checked={marketingConsent}
+                            onChange={(e) => setMarketingConsent(e.target.checked)}
+                            className="mt-0.5 h-4 w-4 rounded border-border text-primary focus:ring-primary/20 accent-primary shrink-0"
+                          />
+                          <span className="text-[10px] font-semibold text-foreground group-hover:text-primary transition-colors leading-relaxed">
+                            Ceviz Bahçesi'nin kampanya, indirim ve hatırlatma bildirimleri hakkında tarafıma E-posta veya SMS ile <span className="font-bold">ticari elektronik ileti</span> gönderilmesine onay veriyorum.
+                          </span>
+                        </label>
+                        
+                        <label className="flex items-start gap-2 cursor-pointer select-none group">
+                          <input
+                            type="checkbox"
+                            checked={contractConsent}
+                            onChange={(e) => setContractConsent(e.target.checked)}
+                            className="mt-0.5 h-4 w-4 rounded border-border text-primary focus:ring-primary/20 accent-primary shrink-0"
+                          />
+                          <span className="text-[10px] font-semibold text-foreground group-hover:text-primary transition-colors leading-relaxed">
+                            <a href="/sozlesmeler/mesafeli-satis" target="_blank" className="text-accent underline font-bold hover:text-accent/80">Mesafeli Satış Sözleşmesi</a>'ni ve <a href="/sozlesmeler/kvkk" target="_blank" className="text-accent underline font-bold hover:text-accent/80">KVKK Aydınlatma Metni</a>'ni okudum, anladım ve kabul ediyorum. <span className="text-destructive font-bold">*</span>
+                          </span>
+                        </label>
+                      </div>
+
                       {smsError && (
                         <p className="text-xs text-destructive font-bold bg-destructive/10 p-2 rounded border border-destructive/20">{smsError}</p>
                       )}
 
                       <button
                         type="submit"
-                        disabled={!isVerified}
+                        disabled={!isVerified || isSubmitting}
                         className={cn(
                           buttonVariants({ variant: "default", size: "lg" }),
                           "w-full bg-accent hover:bg-accent/90 text-white font-bold h-12 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-accent/15 pt-1 disabled:opacity-50 disabled:pointer-events-none"
                         )}
                       >
-                        <Send className="h-4 w-4" /> Siparişi Tamamla & Bildir
+                        {isSubmitting ? (
+                          <span className="flex items-center gap-2">
+                            <span className="h-4.5 w-4.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                            İşleniyor...
+                          </span>
+                        ) : (
+                          <>
+                            <Send className="h-4 w-4" /> Siparişi Tamamla & Bildir
+                          </>
+                        )}
                       </button>
                     </form>
 

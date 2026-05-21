@@ -63,12 +63,31 @@ model ProductVariant {
 
 model Order {
   id              String    @id @default(uuid())
+  orderNo         String?   @unique
   userId          String?
   status          String    @default("PENDING") // PENDING, PAID, SHIPPED, COMPLETED, CANCELLED
   total           Float
   cargoFee        Float     @default(0)
   cargoTrackingNo String?
   createdAt       DateTime  @default(now())
+
+  // Customer & Shipping Details
+  customerName    String?
+  customerPhone   String?
+  customerEmail   String?
+  shippingAddress String?
+
+  // Billing Details
+  wantsInvoice    Boolean   @default(false)
+  invoiceType     String?   // "bireysel" | "kurumsal"
+  companyName     String?
+  taxOffice       String?
+  taxNumber       String?
+  tckn            String?
+
+  // CRM & Marketing
+  marketingConsent Boolean  @default(false)
+  consentDate      DateTime?
 
   user            User?     @relation(fields: [userId], references: [id])
   items           OrderItem[]
