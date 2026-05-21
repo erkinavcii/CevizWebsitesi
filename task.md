@@ -1,0 +1,21 @@
+# Ceviz Bahçesi Görev Listesi
+
+- `[x]` **Faz 3: Proje Kurulumu ve DevOps**
+  - `[x]` Next.js 14 projesi oluşturuluyor (`ceviz-website` klasörü).
+  - `[x]` Tailwind config ve shadcn/ui kurulumu.
+  - `[x]` Veritabanı seçimi ve ORM (Prisma/Drizzle) yapılandırması (Supabase + Prisma).
+- `[/]` **Faz 4: Frontend (Arayüz) Geliştirme**
+  - `[x]` Marka renkleri ve fontların sisteme entegre edilmesi.
+  - `[/]` Ortak bileşenlerin (Button, Card, vs.) tasarlanması.
+  - `[ ]` Ana sayfa tasarımı (Hero section, öne çıkanlar, hikaye).
+  - `[ ]` Ürün katalog sayfası.
+  - `[ ]` Ürün detay sayfası (varyant seçimi).
+  - `[ ]` Sepet ve Checkout akışı.
+- `[ ]` **Faz 5: Backend & Veritabanı**
+  - `[ ]` Veritabanı şemasının oluşturulması (Kullanıcılar, Ürünler, Siparişler).
+  - `[ ]` Ürün ve kategori API uçlarının (Route Handlers) yazılması.
+  - `[ ]` Sipariş oluşturma API'si.
+- `[ ]` **Faz 5.5: Entegrasyonlar**
+  - `[ ]` Iyzico ödeme entegrasyonu.
+  - `[ ]` Kargo API entegrasyonu (ör. Aras).
+  - `[ ]` Telegram / n8n bilgilendirme sistemi.

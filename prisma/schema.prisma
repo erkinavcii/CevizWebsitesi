@@ -1,0 +1,129 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id              String    @id @default(uuid())
+  email           String?   @unique
+  phone           String?   @unique
+  name            String?
+  hashedPassword  String?
+  provider        String    // 'local' | 'google' | 'apple' | 'guest'
+  role            String    @default("USER")
+  createdAt       DateTime  @default(now())
+
+  addresses       Address[]
+  orders          Order[]
+  reviews         Review[]
+}
+
+model Address {
+  id              String    @id @default(uuid())
+  userId          String
+  title           String
+  fullAddress     String
+  city            String
+  district        String
+  postalCode      String?
+  user            User      @relation(fields: [userId], references: [id])
+}
+
+model Product {
+  id              String    @id @default(uuid())
+  slug            String    @unique
+  name            String
+  description     String
+  isActive        Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+
+  variants        ProductVariant[]
+  reviews         Review[]
+}
+
+model ProductVariant {
+  id              String    @id @default(uuid())
+  productId       String
+  label           String    // e.g. "500g", "1kg"
+  weightG         Int
+  price           Float
+  sku             String?
+  stockKg         Float     @default(0)
+  
+  product         Product   @relation(fields: [productId], references: [id])
+  orderItems      OrderItem[]
+  stockAlerts     StockAlert[]
+}
+
+model Order {
+  id              String    @id @default(uuid())
+  userId          String?
+  status          String    @default("PENDING") // PENDING, PAID, SHIPPED, COMPLETED, CANCELLED
+  total           Float
+  cargoFee        Float     @default(0)
+  cargoTrackingNo String?
+  createdAt       DateTime  @default(now())
+
+  user            User?     @relation(fields: [userId], references: [id])
+  items           OrderItem[]
+  payments        Payment[]
+}
+
+model OrderItem {
+  id              String    @id @default(uuid())
+  orderId         String
+  variantId       String
+  quantity        Int
+  unitPrice       Float
+
+  order           Order     @relation(fields: [orderId], references: [id])
+  variant         ProductVariant @relation(fields: [variantId], references: [id])
+}
+
+model Payment {
+  id              String    @id @default(uuid())
+  orderId         String
+  provider        String    // e.g. "iyzico"
+  status          String
+  providerRef     String?
+  amount          Float
+
+  order           Order     @relation(fields: [orderId], references: [id])
+}
+
+model Review {
+  id              String    @id @default(uuid())
+  userId          String
+  productId       String
+  rating          Int
+  body            String?
+  photoUrl        String?
+  isVerified      Boolean   @default(false)
+
+  user            User      @relation(fields: [userId], references: [id])
+  product         Product   @relation(fields: [productId], references: [id])
+}
+
+model BlogPost {
+  id              String    @id @default(uuid())
+  slug            String    @unique
+  title           String
+  content         String
+  category        String
+  publishedAt     DateTime  @default(now())
+}
+
+model StockAlert {
+  id              String    @id @default(uuid())
+  variantId       String
+  thresholdKg     Float
+  notifiedAt      DateTime?
+
+  variant         ProductVariant @relation(fields: [variantId], references: [id])
+}
