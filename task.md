@@ -8,9 +8,9 @@
   - `[x]` Marka renkleri ve fontların sisteme entegre edilmesi.
   - `[x]` Ortak bileşenlerin (Button, Card, vs.) tasarlanması.
   - `[/]` Ana sayfa tasarımı (Hero section tamamlandı, öne çıkanlar ve hikaye eklenecek).
-  - `[ ]` Ürün katalog sayfası.
+  - `[x]` Ürün katalog sayfası (İnteraktif mock veri kataloğu ve sepet hesaplayıcı /urunler sayfasında hazır!).
   - `[ ]` Ürün detay sayfası (varyant seçimi).
-  - `[ ]` Sepet ve Checkout akışı.
+  - `[x]` Sepet ve Checkout akışı (Desi bazlı kargo hesabı, %10 KDV ve Telegram botu webhook JSON simülatörüyle hazır!).
 - `[/]` **Faz 5: Backend & Veritabanı**
   - `[x]` Veritabanı şemasının oluşturulması ve Supabase'e senkronize edilmesi (User, Product, Order vb. tabloları oluşturuldu).
   - `[ ]` Ürün ve kategori API uçlarının (Route Handlers) yazılması.
