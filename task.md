@@ -6,13 +6,13 @@
   - `[x]` Veritabanı seçimi ve ORM (Prisma/Drizzle) yapılandırması (Supabase + Prisma).
 - `[/]` **Faz 4: Frontend (Arayüz) Geliştirme**
   - `[x]` Marka renkleri ve fontların sisteme entegre edilmesi.
-  - `[/]` Ortak bileşenlerin (Button, Card, vs.) tasarlanması.
-  - `[ ]` Ana sayfa tasarımı (Hero section, öne çıkanlar, hikaye).
+  - `[x]` Ortak bileşenlerin (Button, Card, vs.) tasarlanması.
+  - `[/]` Ana sayfa tasarımı (Hero section tamamlandı, öne çıkanlar ve hikaye eklenecek).
   - `[ ]` Ürün katalog sayfası.
   - `[ ]` Ürün detay sayfası (varyant seçimi).
   - `[ ]` Sepet ve Checkout akışı.
-- `[ ]` **Faz 5: Backend & Veritabanı**
-  - `[ ]` Veritabanı şemasının oluşturulması (Kullanıcılar, Ürünler, Siparişler).
+- `[/]` **Faz 5: Backend & Veritabanı**
+  - `[x]` Veritabanı şemasının oluşturulması ve Supabase'e senkronize edilmesi (User, Product, Order vb. tabloları oluşturuldu).
   - `[ ]` Ürün ve kategori API uçlarının (Route Handlers) yazılması.
   - `[ ]` Sipariş oluşturma API'si.
 - `[ ]` **Faz 5.5: Entegrasyonlar**
