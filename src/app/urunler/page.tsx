@@ -293,7 +293,15 @@ export default function UrunlerPage() {
         throw new Error(result.error || "Sipariş oluşturulurken bir hata meydana geldi.");
       }
 
-      console.log("Database order created successfully:", result);
+      console.log("Sipariş başarıyla oluşturuldu, Iyzico'ya yönlendiriliyor:", result);
+      
+      if (result.paymentPageUrl) {
+        // Iyzico ödeme sayfasına yönlendir
+        window.location.href = result.paymentPageUrl;
+        return;
+      }
+
+      // Fallback (eğer URL gelmezse)
       setOrderSuccess(true);
       
       setTimeout(() => {

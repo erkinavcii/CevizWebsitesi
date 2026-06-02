@@ -4,18 +4,18 @@
   - `[x]` Next.js 14 projesi oluşturuluyor (`ceviz-website` klasörü).
   - `[x]` Tailwind config ve shadcn/ui kurulumu.
   - `[x]` Veritabanı seçimi ve ORM (Prisma/Drizzle) yapılandırması (Supabase + Prisma).
-- `[/]` **Faz 4: Frontend (Arayüz) Geliştirme**
+- `[x]` **Faz 4: Frontend (Arayüz) Geliştirme**
   - `[x]` Marka renkleri ve fontların sisteme entegre edilmesi.
   - `[x]` Ortak bileşenlerin (Button, Card, vs.) tasarlanması.
-  - `[/]` Ana sayfa tasarımı (Hero section tamamlandı, öne çıkanlar ve hikaye eklenecek).
+  - `[x]` Ana sayfa tasarımı (Hero section, öne çıkanlar, neden biz, hikaye ve yorumlar eklendi).
   - `[x]` Ürün katalog sayfası (İnteraktif mock veri kataloğu ve sepet hesaplayıcı /urunler sayfasında hazır!).
-  - `[ ]` Ürün detay sayfası (varyant seçimi).
+  - `[x]` Ürün detay sayfası (varyant seçimi ve dinamik detay sayfası hazır!).
   - `[x]` Sepet ve Checkout akışı (Desi bazlı kargo hesabı, %10 KDV, sürükle-bırak özel ağırlık seçimi (min 1 kg), TCKN/Fatura bilgileri, SMS OTP telefon doğrulaması ve Telegram webhook simülatörüyle hazır!).
 - `[x]` **Faz 5: Backend & Veritabanı**
   - `[x]` Veritabanı şemasının oluşturulması ve Supabase'e senkronize edilmesi (User, Product, Order vb. tabloları oluşturuldu).
   - `[x]` Ürün ve kategori API uçlarının (Route Handlers) yazılması.
   - `[x]` Sipariş oluşturma API'si.
-- `[ ]` **Faz 5.5: Entegrasyonlar**
-  - `[ ]` Iyzico ödeme entegrasyonu.
-  - `[ ]` Kargo API entegrasyonu (ör. Aras).
-  - `[ ]` Telegram / n8n bilgilendirme sistemi.
+- `[x]` **Faz 5.5: Entegrasyonlar**
+  - `[x]` Iyzico ödeme entegrasyonu.
+  - `[x]` Kargo API entegrasyonu (simüle edilmiş Aras Kargo otomatik takip no üretimi).
+  - `[x]` Telegram / n8n bilgilendirme sistemi (ödeme başarılı olduğunda tetiklenen bildirim kancaları).

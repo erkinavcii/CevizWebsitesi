@@ -1,5 +1,16 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import iyzipay from "@/lib/iyzico";
+
+// Iyzico callback-based create method wrapped in Promise
+const initializeCheckoutForm = (request: any): Promise<any> => {
+  return new Promise((resolve, reject) => {
+    iyzipay.checkoutFormInitialize.create(request, (err: any, result: any) => {
+      if (err) return reject(err);
+      resolve(result);
+    });
+  });
+};
 
 export async function POST(request: Request) {
   try {
@@ -20,83 +31,61 @@ export async function POST(request: Request) {
       cargoFee,
       grandTotal,
       marketingConsent,
-    } = body as {
-      orderNo: string;
-      name: string;
-      email: string;
-      phone: string;
-      address: string;
-      cart: Array<{
-        id: string;
-        productId: string;
-        name: string;
-        weightKg: number;
-        pricePerKg: number;
-        totalPrice: number;
-        image: string;
-      }>;
-      wantsInvoice: boolean;
-      invoiceType?: "bireysel" | "kurumsal";
-      companyName?: string;
-      taxOffice?: string;
-      taxNumber?: string;
-      tckn?: string;
-      cargoFee: number;
-      grandTotal: number;
-      marketingConsent?: boolean;
-    };
+    } = body as any;
 
-    // Validate required fields
     if (!name || !email || !phone || !address || !cart || cart.length === 0) {
-      return NextResponse.json(
-        { error: "Lütfen tüm zorunlu alanları doldurun ve sepetinizin boş olmadığından emin olun." },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Lütfen tüm zorunlu alanları doldurun." }, { status: 400 });
     }
 
-    // Process and map order items
-    const orderItemsData: Array<{
-      variantId: string;
-      quantity: number;
-      unitPrice: number;
-    }> = [];
+    const orderItemsData: any[] = [];
+    let basketItemsForIyzico: any[] = [];
     
     for (const item of cart) {
-      // Map "prod-1" and "prod-2" to their database slugs
       const slug = item.productId === "prod-1" ? "kemah-kabuklu-ceviz" : "kemah-ic-ceviz";
-      
       const product = await prisma.product.findUnique({
         where: { slug },
         include: { variants: true },
       });
 
       if (!product || product.variants.length === 0) {
-        return NextResponse.json(
-          { error: `Ürün veritabanında bulunamadı: ${item.name}` },
-          { status: 404 }
-        );
+        return NextResponse.json({ error: `Ürün bulunamadı: ${item.name}` }, { status: 404 });
       }
 
-      // The base variant is 0.5 Kg
       const variant = product.variants[0];
-      
-      // Map quantity: 0.5 kg variants. 3.5 kg -> 7 items.
       const quantity = Math.round(item.weightKg * 2);
       
       orderItemsData.push({
         variantId: variant.id,
         quantity,
-        unitPrice: variant.price, // e.g. 120 TL for 0.5kg
+        unitPrice: variant.price,
+      });
+
+      basketItemsForIyzico.push({
+        id: variant.id,
+        name: product.name,
+        category1: "Gıda",
+        itemType: "PHYSICAL",
+        price: (variant.price * quantity).toString()
       });
     }
 
-    // Create the order in the database inside a transaction
+    // Add Cargo as a basket item if there is a fee
+    if (cargoFee > 0) {
+      basketItemsForIyzico.push({
+        id: "CARGO",
+        name: "Kargo Ücreti",
+        category1: "Kargo",
+        itemType: "PHYSICAL",
+        price: cargoFee.toString()
+      });
+    }
+
+    // Create the order in DB with status PENDING_PAYMENT
     const order = await prisma.$transaction(async (tx) => {
-      // 1. Create the order
       const newOrder = await tx.order.create({
         data: {
           orderNo,
-          status: "PENDING",
+          status: "PENDING_PAYMENT", // Changed from PENDING
           total: grandTotal,
           cargoFee,
           customerName: name,
@@ -111,59 +100,85 @@ export async function POST(request: Request) {
           tckn: wantsInvoice && invoiceType === "bireysel" ? tckn : null,
           marketingConsent: !!marketingConsent,
           consentDate: marketingConsent ? new Date() : null,
-          items: {
-            create: orderItemsData,
-          },
-        },
-        include: {
-          items: {
-            include: {
-              variant: {
-                include: {
-                  product: true,
-                },
-              },
-            },
-          },
-        },
-      });
-
-      // 2. Update variant stocks (reduce stockKg by weight ordered)
-      for (const item of cart) {
-        const slug = item.productId === "prod-1" ? "kemah-kabuklu-ceviz" : "kemah-ic-ceviz";
-        const product = await tx.product.findUnique({
-          where: { slug },
-          include: { variants: true },
-        });
-        
-        if (product && product.variants.length > 0) {
-          const variant = product.variants[0];
-          const newStock = Math.max(0, variant.stockKg - item.weightKg);
-          
-          await tx.productVariant.update({
-            where: { id: variant.id },
-            data: { stockKg: newStock },
-          });
+          items: { create: orderItemsData },
         }
-      }
-
+      });
       return newOrder;
     });
 
-    console.log(`🎉 Sipariş başarıyla veritabanına kaydedildi: ${order.orderNo} (ID: ${order.id})`);
+    // Initialize Iyzico
+    const [firstName, ...lastNames] = name.split(" ");
+    const surname = lastNames.join(" ") || "Bilinmiyor";
+    const ip = request.headers.get("x-forwarded-for") || "85.34.78.112";
 
-    // Return the created order
-    return NextResponse.json({
-      success: true,
-      message: "Siparişiniz başarıyla alındı.",
-      orderId: order.id,
-      orderNo: order.orderNo,
-    }, { status: 201 });
+    const host = request.headers.get("host") || "localhost:3000";
+    const protocol = host.includes("localhost") ? "http" : "https";
+    const callbackUrl = `${protocol}://${host}/api/payment/callback`;
+
+    const iyzicoRequest = {
+      locale: "TR",
+      conversationId: order.id,
+      price: grandTotal.toString(),
+      paidPrice: grandTotal.toString(),
+      currency: "TRY",
+      basketId: order.orderNo,
+      paymentGroup: "PRODUCT",
+      callbackUrl: callbackUrl,
+      enabledInstallments: [2, 3, 6, 9],
+      buyer: {
+        id: order.id,
+        name: firstName,
+        surname: surname,
+        gsmNumber: phone,
+        email: email,
+        identityNumber: tckn || "11111111111", // Dummy TCKN for sandbox
+        lastLoginDate: "2026-05-21 15:12:09",
+        registrationDate: "2026-05-21 15:12:09",
+        registrationAddress: address,
+        ip: ip,
+        city: "Istanbul", // Hardcoded for simplicity or parsed from address
+        country: "Turkey",
+        zipCode: "34732"
+      },
+      shippingAddress: {
+        contactName: name,
+        city: "Istanbul",
+        country: "Turkey",
+        address: address,
+        zipCode: "34732"
+      },
+      billingAddress: {
+        contactName: companyName || name,
+        city: "Istanbul",
+        country: "Turkey",
+        address: address,
+        zipCode: "34732"
+      },
+      basketItems: basketItemsForIyzico
+    };
+
+    const iyzicoResult = await initializeCheckoutForm(iyzicoRequest);
+
+    if (iyzicoResult.status === "success") {
+      return NextResponse.json({
+        success: true,
+        paymentPageUrl: iyzicoResult.paymentPageUrl, // Redirect URL
+        orderId: order.id
+      }, { status: 200 });
+    } else {
+      console.error("Iyzico Error:", iyzicoResult);
+      // Mark order as cancelled/failed
+      await prisma.order.update({
+        where: { id: order.id },
+        data: { status: "CANCELLED" }
+      });
+      return NextResponse.json({ error: "Ödeme altyapısında bir sorun oluştu: " + iyzicoResult.errorMessage }, { status: 500 });
+    }
 
   } catch (error: any) {
     console.error("Sipariş oluşturulurken hata:", error);
     return NextResponse.json(
-      { error: "Sipariş oluşturulurken sistemsel bir hata meydana geldi.", details: error.message },
+      { error: "Sistemsel bir hata meydana geldi.", details: error.message },
       { status: 500 }
     );
   }

@@ -93,6 +93,12 @@ export default function OrderList({ initialOrders }: { initialOrders: Order[] })
                   <MapPin className="h-4 w-4 text-zinc-400 shrink-0 mt-0.5" />
                   <span className="whitespace-pre-wrap">{order.shippingAddress}</span>
                 </div>
+                {order.cargoTrackingNo && (
+                  <div className="flex items-center gap-2 text-xs font-bold text-blue-800 bg-blue-50 border border-blue-200 px-3 py-2 rounded-xl mt-3 w-fit">
+                    <Truck className="h-4 w-4 shrink-0 text-blue-600 animate-pulse" />
+                    <span>Aras Kargo Takip No: <span className="font-mono font-black select-all">{order.cargoTrackingNo}</span></span>
+                  </div>
+                )}
               </div>
 
               {/* Order Items */}

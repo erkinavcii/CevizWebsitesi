@@ -12,7 +12,8 @@ export async function loginAction(formData: FormData) {
 
   if (password === adminPassword) {
     // Şifre doğruysa admin_token cookie'sini oluştur
-    cookies().set({
+    const cookieStore = await cookies();
+    cookieStore.set({
       name: "admin_token",
       value: password,
       httpOnly: true,
@@ -27,6 +28,7 @@ export async function loginAction(formData: FormData) {
 }
 
 export async function logoutAction() {
-  cookies().delete("admin_token");
+  const cookieStore = await cookies();
+  cookieStore.delete("admin_token");
   return { success: true };
 }
