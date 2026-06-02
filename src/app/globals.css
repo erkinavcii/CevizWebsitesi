@@ -7,9 +7,9 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
+  --font-sans: var(--font-inter);
   --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  --font-heading: var(--font-playfair);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -48,85 +48,352 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/* ───────────────────────────────────────────
+   DARK-PREMIUM RENK PALETİ
+─────────────────────────────────────────── */
 :root {
-  --background: #F5F0E8; /* Krem Beyaz - doğal kağıt */
-  --foreground: #1C1410; /* Gece - tipografi */
-  --card: #FFFFFF;
-  --card-foreground: #1C1410;
-  --popover: #FFFFFF;
-  --popover-foreground: #1C1410;
-  --primary: #5C4033; /* Koyu Kahve - ceviz kabuğu */
-  --primary-foreground: #F5F0E8;
-  --secondary: #8B6914; /* Altın Amber - iç ceviz */
-  --secondary-foreground: #FFFFFF;
-  --muted: #EBE4D8;
-  --muted-foreground: #736B5E;
-  --accent: #4A7C59; /* Yaprak Yeşili - organik */
-  --accent-foreground: #FFFFFF;
-  --destructive: #EF4444;
-  --destructive-foreground: #FFFFFF;
-  --border: #E0D7C8;
-  --input: #E0D7C8;
-  --ring: #5C4033;
-  --chart-1: #5C4033;
-  --chart-2: #8B6914;
-  --chart-3: #4A7C59;
-  --chart-4: #E1A140;
-  --chart-5: #A8BA9A;
-  --radius: 0.5rem;
-  --sidebar: #F5F0E8;
-  --sidebar-foreground: #1C1410;
-  --sidebar-primary: #5C4033;
-  --sidebar-primary-foreground: #F5F0E8;
-  --sidebar-accent: #EBE4D8;
-  --sidebar-accent-foreground: #1C1410;
-  --sidebar-border: #E0D7C8;
-  --sidebar-ring: #5C4033;
-}
+  /* Arka Planlar */
+  --background:           #0A0806;   /* Kömür siyahı */
+  --background-alt:       #100D0B;   /* İkincil koyu katman */
 
-.dark {
-  --background: #1C1410;
-  --foreground: #F5F0E8;
-  --card: #2A201A;
-  --card-foreground: #F5F0E8;
-  --popover: #2A201A;
-  --popover-foreground: #F5F0E8;
-  --primary: #8B6914; /* Koyu temada Amber daha iyi okunur */
-  --primary-foreground: #1C1410;
-  --secondary: #5C4033;
+  /* Yüzeyler */
+  --card:                 #161210;   /* Glassmorphism kart yüzeyi */
+  --card-foreground:      #F5F0E8;
+  --popover:              #1A1614;
+  --popover-foreground:   #F5F0E8;
+
+  /* Birincil — Amber Altın */
+  --primary:              #D4A017;   /* Parlak altın sarısı */
+  --primary-foreground:   #0A0806;
+
+  /* İkincil — Sıcak Kahve */
+  --secondary:            #8B6F54;
   --secondary-foreground: #F5F0E8;
-  --muted: #3D3028;
-  --muted-foreground: #A39B92;
-  --accent: #4A7C59;
-  --accent-foreground: #FFFFFF;
-  --destructive: #EF4444;
+
+  /* Vurgu — Organik Yeşil */
+  --accent:               #5AA469;
+  --accent-foreground:    #FFFFFF;
+
+  /* Metinler */
+  --foreground:           #F5F0E8;   /* Krem beyaz ana metin */
+  --muted:                #1E1A18;
+  --muted-foreground:     #A89B8C;   /* Soluk kahve ikincil metin */
+
+  /* Kenarlıklar */
+  --border:               #2A2420;
+  --input:                #2A2420;
+  --ring:                 #D4A017;
+
+  /* Yıkıcı */
+  --destructive:          #EF4444;
   --destructive-foreground: #FFFFFF;
-  --border: #3D3028;
-  --input: #3D3028;
-  --ring: #8B6914;
-  --chart-1: #8B6914;
-  --chart-2: #5C4033;
-  --chart-3: #4A7C59;
+
+  /* Grafikler */
+  --chart-1: #D4A017;
+  --chart-2: #8B6F54;
+  --chart-3: #5AA469;
   --chart-4: #E1A140;
   --chart-5: #A8BA9A;
-  --sidebar: #1C1410;
-  --sidebar-foreground: #F5F0E8;
-  --sidebar-primary: #8B6914;
-  --sidebar-primary-foreground: #1C1410;
-  --sidebar-accent: #3D3028;
+
+  --radius: 0.5rem;
+
+  /* Sidebar */
+  --sidebar:                #0A0806;
+  --sidebar-foreground:     #F5F0E8;
+  --sidebar-primary:        #D4A017;
+  --sidebar-primary-foreground: #0A0806;
+  --sidebar-accent:         #1E1A18;
   --sidebar-accent-foreground: #F5F0E8;
-  --sidebar-border: #3D3028;
-  --sidebar-ring: #8B6914;
+  --sidebar-border:         #2A2420;
+  --sidebar-ring:           #D4A017;
+
+  /* Özel Glow Renkleri */
+  --glow-amber:   212, 160, 23;    /* RGB — amber */
+  --glow-green:   90, 164, 105;    /* RGB — yeşil */
+  --glow-brown:   139, 111, 84;    /* RGB — kahve */
 }
 
+/* ───────────────────────────────────────────
+   TEMEL STİLLER
+─────────────────────────────────────────── */
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
-  body {
-    @apply bg-background text-foreground;
-  }
+
   html {
-    @apply font-sans;
+    @apply font-sans scroll-smooth;
+    color-scheme: dark;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    background-image:
+      radial-gradient(ellipse 80% 50% at 20% -10%, rgba(var(--glow-amber), 0.06) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 40% at 80% 110%, rgba(var(--glow-green), 0.04) 0%, transparent 60%);
+    background-attachment: fixed;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-playfair), Georgia, serif;
+  }
+}
+
+/* ───────────────────────────────────────────
+   GLASSMORPHİSM UTILITY SINIFLARI
+─────────────────────────────────────────── */
+@layer utilities {
+
+  /* Temel cam kart */
+  .glass-card {
+    background: rgba(22, 18, 16, 0.65);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(var(--glow-amber), 0.12);
+  }
+
+  /* Daha koyu / yoğun cam */
+  .glass-dark {
+    background: rgba(10, 8, 6, 0.75);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  /* Navbar için özel cam */
+  .glass-navbar {
+    background: rgba(10, 8, 6, 0.80);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(var(--glow-amber), 0.10);
+  }
+
+  /* ───────────────────────────────────────
+     GLOW EFEKTLERİ
+  ─────────────────────────────────────── */
+
+  .glow-amber {
+    box-shadow:
+      0 0 20px rgba(var(--glow-amber), 0.30),
+      0 0 60px rgba(var(--glow-amber), 0.12),
+      0 0 100px rgba(var(--glow-amber), 0.05);
+  }
+
+  .glow-amber-sm {
+    box-shadow:
+      0 0 10px rgba(var(--glow-amber), 0.35),
+      0 0 25px rgba(var(--glow-amber), 0.15);
+  }
+
+  .glow-green {
+    box-shadow:
+      0 0 20px rgba(var(--glow-green), 0.30),
+      0 0 60px rgba(var(--glow-green), 0.12);
+  }
+
+  .glow-green-sm {
+    box-shadow:
+      0 0 10px rgba(var(--glow-green), 0.35),
+      0 0 25px rgba(var(--glow-green), 0.15);
+  }
+
+  .glow-brown-sm {
+    box-shadow:
+      0 0 10px rgba(var(--glow-brown), 0.35),
+      0 0 25px rgba(var(--glow-brown), 0.15);
+  }
+
+  /* Metin glow */
+  .text-glow-amber {
+    text-shadow:
+      0 0 20px rgba(var(--glow-amber), 0.60),
+      0 0 40px rgba(var(--glow-amber), 0.30);
+  }
+
+  .text-glow-white {
+    text-shadow:
+      0 0 20px rgba(255, 255, 255, 0.25),
+      0 0 60px rgba(255, 255, 255, 0.10);
+  }
+
+  /* ───────────────────────────────────────
+     RADİAL DEKORASYON
+  ─────────────────────────────────────── */
+
+  .radial-amber {
+    background: radial-gradient(
+      ellipse at center,
+      rgba(var(--glow-amber), 0.15) 0%,
+      transparent 70%
+    );
+  }
+
+  .radial-green {
+    background: radial-gradient(
+      ellipse at center,
+      rgba(var(--glow-green), 0.12) 0%,
+      transparent 70%
+    );
+  }
+}
+
+/* ───────────────────────────────────────────
+   ANİMASYON KEYFRAME'LERİ
+─────────────────────────────────────────── */
+@layer utilities {
+
+  /* Yüzen obje */
+  @keyframes float {
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    33%       { transform: translateY(-18px) rotate(1deg); }
+    66%       { transform: translateY(-8px) rotate(-0.5deg); }
+  }
+
+  /* Hafif sallanma (ters) */
+  @keyframes float-reverse {
+    0%, 100% { transform: translateY(0px); }
+    50%       { transform: translateY(12px); }
+  }
+
+  /* Neon glow pulse — amber */
+  @keyframes glow-pulse-amber {
+    0%, 100% {
+      box-shadow: 0 0 15px rgba(var(--glow-amber), 0.3),
+                  0 0 30px rgba(var(--glow-amber), 0.1);
+    }
+    50% {
+      box-shadow: 0 0 30px rgba(var(--glow-amber), 0.6),
+                  0 0 60px rgba(var(--glow-amber), 0.3),
+                  0 0 90px rgba(var(--glow-amber), 0.1);
+    }
+  }
+
+  /* Neon glow pulse — yeşil */
+  @keyframes glow-pulse-green {
+    0%, 100% {
+      box-shadow: 0 0 15px rgba(var(--glow-green), 0.2),
+                  0 0 30px rgba(var(--glow-green), 0.08);
+    }
+    50% {
+      box-shadow: 0 0 25px rgba(var(--glow-green), 0.5),
+                  0 0 50px rgba(var(--glow-green), 0.2);
+    }
+  }
+
+  /* Shimmer loading efekti */
+  @keyframes shimmer {
+    0%   { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+
+  /* Yavaş dönme */
+  @keyframes slow-spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+  }
+
+  /* Soldan sağa marquee */
+  @keyframes marquee {
+    from { transform: translateX(0%); }
+    to   { transform: translateX(-50%); }
+  }
+
+  /* Sayaç sayma (CSS only) */
+  @keyframes count-up {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ───────────────────────────────────────
+     ANİMASYON UTILITY SINIFLARI
+  ─────────────────────────────────────── */
+
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .animate-float-reverse {
+    animation: float-reverse 5s ease-in-out infinite;
+  }
+
+  .animate-glow-amber {
+    animation: glow-pulse-amber 3s ease-in-out infinite;
+  }
+
+  .animate-glow-green {
+    animation: glow-pulse-green 4s ease-in-out infinite;
+  }
+
+  .animate-shimmer {
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(var(--glow-amber), 0.15) 50%,
+      transparent 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 2.5s ease-in-out infinite;
+  }
+
+  .animate-slow-spin {
+    animation: slow-spin 20s linear infinite;
+  }
+
+  .animate-marquee {
+    animation: marquee 30s linear infinite;
+  }
+
+  /* Gecikme sınıfları */
+  .animation-delay-200  { animation-delay: 200ms; }
+  .animation-delay-400  { animation-delay: 400ms; }
+  .animation-delay-600  { animation-delay: 600ms; }
+  .animation-delay-800  { animation-delay: 800ms; }
+  .animation-delay-1000 { animation-delay: 1000ms; }
+  .animation-delay-1500 { animation-delay: 1500ms; }
+
+  /* ───────────────────────────────────────
+     GRADIENT YARDIMCILARI
+  ─────────────────────────────────────── */
+
+  .gradient-amber-to-dark {
+    background: linear-gradient(
+      135deg,
+      rgba(var(--glow-amber), 0.15) 0%,
+      transparent 60%
+    );
+  }
+
+  .gradient-text-amber {
+    background: linear-gradient(135deg, #F5C842 0%, #D4A017 50%, #A07010 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .gradient-text-cream {
+    background: linear-gradient(135deg, #FFFFFF 0%, #F5F0E8 50%, #D4C8B5 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* ───────────────────────────────────────
+     ÖZEL SCROLLBAR
+  ─────────────────────────────────────── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: #0A0806; }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(var(--glow-amber), 0.4);
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(var(--glow-amber), 0.7);
+  }
+
+  /* ───────────────────────────────────────
+     INPUT/RANGE CUSTOM STİL
+  ─────────────────────────────────────── */
+  input[type="range"] {
+    accent-color: #D4A017;
   }
 }

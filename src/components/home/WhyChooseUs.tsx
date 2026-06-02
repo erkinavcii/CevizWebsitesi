@@ -2,116 +2,148 @@
 
 import { motion } from "framer-motion";
 import { Leaf, ShieldCheck, Heart, Users, Truck, Snowflake } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
 
 const VALUE_PROPOSITIONS = [
   {
-    icon: Leaf,
+    Icon: Leaf,
     title: "100% Doğal & İlaçsız",
     description: "Bahçemizde hiçbir kimyasal pestisit, suni hormon ve koruyucu kullanmıyoruz. Sadece organik gübre ve kaynak suyu.",
-    color: "text-accent bg-accent/10 border-accent/20"
+    glowClass: "glow-green-sm",
+    borderHover: "hover:border-accent/40",
+    iconBg: "bg-accent/15 border-accent/20 text-accent",
+    accentColor: "#5AA469",
   },
   {
-    icon: ShieldCheck,
+    Icon: ShieldCheck,
     title: "Analizli ve Sertifikalı",
     description: "Cevizlerimizin her hasat döneminde laboratuvar testleri ve ilaç kalıntısı (pestisit) analizleri yapılmakta ve belgelenmektedir.",
-    color: "text-secondary bg-secondary/10 border-secondary/20"
+    glowClass: "glow-amber-sm",
+    borderHover: "hover:border-primary/40",
+    iconBg: "bg-primary/15 border-primary/20 text-primary",
+    accentColor: "#D4A017",
   },
   {
-    icon: Users,
+    Icon: Users,
     title: "Aracısız, Doğrudan Üreticiden",
     description: "Büyük aracılar, kabzımallar ve komisyoncular yok. Aile bahçemizden doğrudan sizin kapınıza ulaştırarak uygun fiyat sunuyoruz.",
-    color: "text-primary bg-primary/10 border-primary/20"
+    glowClass: "glow-brown-sm",
+    borderHover: "hover:border-secondary/40",
+    iconBg: "bg-secondary/15 border-secondary/20 text-secondary",
+    accentColor: "#8B6F54",
   },
   {
-    icon: Snowflake,
+    Icon: Snowflake,
     title: "Taze Hasat ve Taze Kırım",
     description: "Ekim ayındaki hasattan sonra cevizleri kabuklu saklıyoruz. İç ceviz siparişiniz geldiğinde el kırmasıyla taze kırım yapıyoruz.",
-    color: "text-blue-600 bg-blue-50 dark:bg-blue-900/10 border-blue-200 dark:border-blue-800/20"
+    glowClass: "glow-green-sm",
+    borderHover: "hover:border-accent/40",
+    iconBg: "bg-accent/15 border-accent/20 text-accent",
+    accentColor: "#5AA469",
   },
   {
-    icon: Truck,
+    Icon: Truck,
     title: "Özel Korumalı Kargo",
     description: "Cevizlerinizin tazeliğini ve aromasını korumak için kalın vakumlu poşetlerde veya bez torbalarda, kırılmaya karşı korumalı paketliyoruz.",
-    color: "text-amber-600 bg-amber-50 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800/20"
+    glowClass: "glow-amber-sm",
+    borderHover: "hover:border-primary/40",
+    iconBg: "bg-primary/15 border-primary/20 text-primary",
+    accentColor: "#D4A017",
   },
   {
-    icon: Heart,
+    Icon: Heart,
     title: "Sağlıklı ve Besleyici",
     description: "Omega-3 yağ asitleri, antioksidanlar ve lif bakımından zengin Kemah cevizleri, beyin ve kalp sağlığınız için en doğal destektir.",
-    color: "text-rose-600 bg-rose-50 dark:bg-rose-900/10 border-rose-200 dark:border-rose-800/20"
-  }
+    glowClass: "glow-green-sm",
+    borderHover: "hover:border-accent/40",
+    iconBg: "bg-accent/15 border-accent/20 text-accent",
+    accentColor: "#5AA469",
+  },
 ];
 
 export function WhyChooseUs() {
   return (
-    <section className="py-24 bg-background relative overflow-hidden">
-      {/* Decorative Blur Background elements */}
-      <div className="absolute top-1/2 left-0 -translate-y-1/2 -z-10 h-[500px] w-[500px] rounded-full bg-accent/5 blur-3xl" />
-      <div className="absolute bottom-0 right-0 -z-10 h-[300px] w-[300px] rounded-full bg-secondary/5 blur-3xl" />
+    <section className="py-32 bg-background-alt relative overflow-hidden" style={{ background: "#100D0B" }}>
+      {/* Dekoratif arka plan */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] rounded-full bg-primary/4 blur-[150px]" />
+        <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] rounded-full bg-accent/3 blur-[120px]" />
+      </div>
 
-      <div className="container mx-auto px-4 max-w-7xl">
-        {/* Section Title */}
-        <div className="text-center max-w-2xl mx-auto mb-20 space-y-4">
+      <div className="container mx-auto px-4 max-w-7xl relative z-10">
+
+        {/* Bölüm Başlığı */}
+        <div className="text-center max-w-2xl mx-auto mb-20 space-y-5">
           <motion.span
             initial={{ opacity: 0, y: 10 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3.5 py-1.5 text-xs font-bold text-primary dark:bg-primary/20"
+            className="inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-bold border border-primary/30 bg-primary/10 text-primary"
           >
             Neden Biz?
           </motion.span>
+
           <motion.h2
-            initial={{ opacity: 0, y: 15 }}
+            initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
-            className="text-3xl font-extrabold tracking-tight sm:text-4xl md:text-5xl font-heading text-zinc-900 dark:text-zinc-50"
+            className="font-heading font-bold text-4xl sm:text-5xl md:text-6xl text-foreground"
           >
-            Doğallığın ve Kalitenin Farkı
+            Doğallığın ve{" "}
+            <span className="gradient-text-amber italic">Kalitenin</span> Farkı
           </motion.h2>
+
           <motion.p
-            initial={{ opacity: 0, y: 15 }}
+            initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.2 }}
-            className="text-muted-foreground text-base"
+            className="text-muted-foreground text-base sm:text-lg leading-relaxed"
           >
-            Market raflarında aylarca bekleyen, ithal ve kimyasal işlem görmüş cevizler yerine, Erzincan Kemah'taki bahçemizden gelen dürüst ve temiz gıda.
+            Market raflarında aylarca bekleyen, ithal ve kimyasal işlem görmüş cevizler yerine,
+            Erzincan Kemah&apos;taki bahçemizden gelen dürüst ve temiz gıda.
           </motion.p>
         </div>
 
-        {/* Feature Cards Grid */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {/* Kart Grid */}
+        <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
           {VALUE_PROPOSITIONS.map((prop, index) => {
-            const Icon = prop.icon;
+            const Icon = prop.Icon;
             return (
               <motion.div
                 key={index}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.08 }}
-                className="flex"
+                transition={{ duration: 0.6, delay: index * 0.08 }}
+                whileHover={{ y: -4 }}
+                className={`group glass-card rounded-[2rem] p-7 space-y-5 border border-border/30 ${prop.borderHover} transition-all duration-400 cursor-default`}
               >
-                <Card className="border bg-card shadow-sm hover:shadow-md transition-all duration-300 rounded-[2rem] overflow-hidden flex flex-col w-full group hover:border-primary/30">
-                  <CardContent className="p-8 space-y-6 flex flex-col justify-between h-full">
-                    <div className="space-y-4">
-                      {/* Icon container */}
-                      <div className={`h-12 w-12 rounded-2xl flex items-center justify-center border shrink-0 transition-transform group-hover:scale-110 duration-300 ${prop.color}`}>
-                        <Icon className="h-6 w-6" />
-                      </div>
-                      
-                      <h3 className="text-xl font-bold text-zinc-900 dark:text-zinc-50 font-heading">
-                        {prop.title}
-                      </h3>
-                      
-                      <p className="text-zinc-600 dark:text-zinc-300 text-sm leading-relaxed">
-                        {prop.description}
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
+                {/* İkon */}
+                <div
+                  className={`h-12 w-12 rounded-2xl flex items-center justify-center border shrink-0 transition-all duration-300 ${prop.iconBg} group-hover:${prop.glowClass} group-hover:scale-110`}
+                  style={{
+                    transition: "box-shadow 0.3s ease, transform 0.3s ease",
+                  }}
+                >
+                  <Icon className="h-5.5 w-5.5 transition-transform duration-300 group-hover:rotate-12" />
+                </div>
+
+                {/* Başlık */}
+                <h3 className="font-heading font-bold text-lg text-foreground leading-snug">
+                  {prop.title}
+                </h3>
+
+                {/* Açıklama */}
+                <p className="text-muted-foreground text-sm leading-relaxed">
+                  {prop.description}
+                </p>
+
+                {/* Alt çizgi — hover'da beliren amber şerit */}
+                <div
+                  className="h-px w-0 group-hover:w-full transition-all duration-500 rounded-full"
+                  style={{ background: prop.accentColor + "40" }}
+                />
               </motion.div>
             );
           })}
