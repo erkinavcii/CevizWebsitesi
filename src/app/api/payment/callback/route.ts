@@ -33,10 +33,10 @@ export async function POST(request: Request) {
       const orderId = result.basketId; // We sent orderNo as basketId but conversationId as orderId
       const conversationId = result.conversationId;
 
-      // Find order
+      // Find order with variants
       const order = await prisma.order.findUnique({
         where: { id: conversationId },
-        include: { items: true }
+        include: { items: { include: { variant: true } } }
       });
 
       if (!order) {
@@ -48,36 +48,42 @@ export async function POST(request: Request) {
         return NextResponse.redirect(new URL(`/odeme-basarili?orderNo=${order.orderNo}`, request.url));
       }
 
-      // 1. Update order status to PENDING (waiting for shipment)
-      const updatedOrder = await prisma.order.update({
-        where: { id: order.id },
-        data: { status: "PENDING" },
-        include: {
-          items: {
-            include: {
-              variant: {
-                include: { product: true }
+      // Atomik veritabanı işlemi: sipariş durumu güncelleme + stok düşme
+      const updatedOrder = await prisma.$transaction(async (tx) => {
+        // 1. Update order status to PENDING (waiting for shipment)
+        const updated = await tx.order.update({
+          where: { id: order.id },
+          data: { status: "PENDING" },
+          include: {
+            items: {
+              include: {
+                variant: {
+                  include: { product: true }
+                }
               }
             }
           }
+        });
+
+        // 2. Reduce stocks using actual variant weight in kg
+        for (const item of updated.items) {
+          const weightInKg = (item.variant.weightG / 1000) * item.quantity;
+          await tx.productVariant.update({
+            where: { id: item.variantId },
+            data: {
+              stockKg: {
+                decrement: weightInKg
+              }
+            }
+          });
         }
+
+        return updated;
       });
 
       // Send notifications (async, non-blocking)
       sendTelegramNotification(updatedOrder).catch(err => console.error("Telegram notify failed:", err));
       sendN8nNotification(updatedOrder).catch(err => console.error("n8n notify failed:", err));
-
-      // 2. Reduce stocks
-      for (const item of order.items) {
-        await prisma.productVariant.update({
-          where: { id: item.variantId },
-          data: {
-            stockKg: {
-              decrement: item.quantity * 0.5 // Assuming base variant is 0.5 kg
-            }
-          }
-        });
-      }
 
       return NextResponse.redirect(new URL(`/odeme-basarili?orderNo=${order.orderNo}`, request.url));
     } else {
